@@ -12,7 +12,7 @@ public partial class Main : Node
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
-        NewGame();
+        // NewGame();
     }
 
     // Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -22,11 +22,24 @@ public partial class Main : Node
     {
         GetNode<Timer>("MobTimer").Stop();
         GetNode<Timer>("ScoreTimer").Stop();
+
+        GetNode<Hud>("HUD").ShowGameOver();
+        
+        GetNode<AudioStreamPlayer2D>("Music").Stop();
+        GetNode<AudioStreamPlayer2D>("DeadSound").Play();
     }
 
     public void NewGame()
     {
+        GetNode<AudioStreamPlayer2D>("Music").Play();
+        
+        GetTree().CallGroup("mobs", Node.MethodName.QueueFree);
+
         _score = 0;
+
+        var hud = GetNode<Hud>("HUD");
+        hud.UpdateScore(_score);
+        hud.ShowMessage("Get Ready!");
 
         var player = GetNode<Player>("Player");
         var startPosition = GetNode<Marker2D>("StartPosition");
@@ -38,18 +51,18 @@ public partial class Main : Node
     private void OnScoreTimerTimeout()
     {
         _score++;
+        GetNode<Hud>("HUD").UpdateScore(_score);
     }
 
     private void OnStartTimerTimeout()
     {
-        GD.Print("Hello!");
         GetNode<Timer>("MobTimer").Start();
         GetNode<Timer>("ScoreTimer").Start();
     }
 
     private void OnMobTimerTimeout()
     {
-        Mob mob = MobScene.Instantiate<Mob>();
+        var mob = MobScene.Instantiate<Mob>();
 
         var mobSpawnLocation = GetNode<PathFollow2D>("Path2D/MobSpawnLocation");
         mobSpawnLocation.ProgressRatio = GD.Randf();
